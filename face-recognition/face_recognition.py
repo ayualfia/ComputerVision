@@ -1,8 +1,15 @@
 import cv2
+import os
+
+# Get the absolute paths to the required files
+current_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.dirname(current_dir)
+cascade_path = os.path.join(base_dir, "haarcascade_frontalface_default.xml")
+model_path = os.path.join(current_dir, "face-model.yml")
 
 recognizer = cv2.face.LBPHFaceRecognizer.create()
-recognizer.read("face-model.yml") # face model from face_training.py
-faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+recognizer.read(model_path) # face model from face_training.py
+faceCascade = cv2.CascadeClassifier(cascade_path)
 font = cv2.FONT_HERSHEY_COMPLEX
 
 id = 0

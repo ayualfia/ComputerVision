@@ -23,8 +23,12 @@ def organizeDataset(path="dataset/"):
 if not checkDataset():
     print("Dataset not found")
 else:
+    # Get the absolute path to the cascade file
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    cascade_path = os.path.join(base_dir, "haarcascade_frontalface_default.xml")
+    
     recognizer = cv2.face.LBPHFaceRecognizer.create()
-    faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+    faceCascade = cv2.CascadeClassifier(cascade_path)
 
     # train faces
     print("Training faces...")
@@ -33,5 +37,6 @@ else:
     print("Training finished!")
 
     # save model
-    recognizer.write('face-model.yml')
-    print("Model saved as 'face-model.yml'")
+    model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'face-model.yml')
+    recognizer.write(model_path)
+    print(f"Model saved as '{model_path}'")
