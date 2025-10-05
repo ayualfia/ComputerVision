@@ -1,17 +1,18 @@
 import cv2
 import os
 
-# Get the absolute path to the cascade file
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Get the absolute path to the cascade file and set up paths
+current_dir = os.path.dirname(os.path.abspath(__file__))
+base_dir = os.path.dirname(current_dir)
 cascade_path = os.path.join(base_dir, "haarcascade_frontalface_default.xml")
+dataset_path = os.path.join(current_dir, "dataset/")
 faceCascade = cv2.CascadeClassifier(cascade_path)
 cap = cv2.VideoCapture(0)
-dataset_path = "dataset/"
 
 if not os.path.exists(dataset_path):
     os.mkdir(dataset_path)
 
-person_id = 1 # id for person that we will detect
+person_id = 2 # id for person that we will detect
 count = 0 # count for image name id
 while True:
     _, frame = cap.read()
