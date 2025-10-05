@@ -2,18 +2,28 @@ import cv2
 import numpy as np
 import os
 
-def checkDataset(directory="dataset/"):
+def get_dataset_path():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(current_dir, "dataset")
+
+def checkDataset(directory=None):
+    if directory is None:
+        directory = get_dataset_path()
     if os.path.exists(directory) and len(os.listdir(directory)) != 0:
         return True
     return False
 
-def organizeDataset(path="dataset/"):
+def organizeDataset(path=None):
+    if path is None:
+        path = get_dataset_path()
     imagePath = [os.path.join(path, p) for p in os.listdir(path)]
     faces = []
     ids = np.array([], dtype="int")
     for i in imagePath:
         img = cv2.cvtColor(cv2.imread(i), cv2.COLOR_BGR2GRAY)
-        id = int(i.split("/")[-1].split(".")[0].split("-")[1])
+        # Use os.path.basename to get just the filename, regardless of OS path separators
+        filename = os.path.basename(i)
+        id = int(filename.split("-")[1])  # Get the ID number between 'Person-' and '-number.jpg'
         face = faceCascade.detectMultiScale(img)
         for (x, y, w, h) in face:
             faces.append(img[y:y+h, x:x+w])
