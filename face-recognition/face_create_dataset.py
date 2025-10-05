@@ -1,7 +1,10 @@
 import cv2
 import os
 
-faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+# Get the absolute path to the cascade file
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+cascade_path = os.path.join(base_dir, "haarcascade_frontalface_default.xml")
+faceCascade = cv2.CascadeClassifier(cascade_path)
 cap = cv2.VideoCapture(0)
 dataset_path = "dataset/"
 
