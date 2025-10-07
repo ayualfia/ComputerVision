@@ -12,7 +12,7 @@ cap = cv2.VideoCapture(0)
 if not os.path.exists(dataset_path):
     os.mkdir(dataset_path)
 
-person_id = 2 # id for person that we will detect
+person_id = 3 # id for person that we will detect
 count = 0 # count for image name id
 while True:
     _, frame = cap.read()
