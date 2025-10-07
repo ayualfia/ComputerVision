@@ -2,24 +2,25 @@ import cv2
 import os
 import json
 
-# ========== Paths ==========
+# ==== Paths ====
 current_dir = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.dirname(current_dir)
 frontal_path = os.path.join(base_dir, "haarcascade_frontalface_default.xml")
-profile_path = os.path.join(base_dir, "haarcascade_profileface.xml")  # opsional
+profile_path = os.path.join(base_dir, "haarcascade_profileface.xml")  # opsional; aman jika belum ada
 model_path   = os.path.join(current_dir, "face-model.yml")
 labels_path  = os.path.join(current_dir, "labels.json")
 
-# ========== Init ==========
+# ==== Init ====
 recognizer = cv2.face.LBPHFaceRecognizer.create()
 recognizer.read(model_path)
+
 frontal = cv2.CascadeClassifier(frontal_path)
 profile = cv2.CascadeClassifier(profile_path) if os.path.exists(profile_path) else None
 if profile is None:
     print("[WARN] haarcascade_profileface.xml tidak ditemukan. Deteksi profile akan dilewati.")
 font = cv2.FONT_HERSHEY_COMPLEX
 
-# labels.json (opsional)
+# Load mapping ID->Nama (opsional)
 id_to_name = {}
 if os.path.exists(labels_path):
     try:
@@ -28,14 +29,32 @@ if os.path.exists(labels_path):
     except Exception as e:
         print(f"[WARN] Gagal baca labels.json: {e}. Pakai ID numerik saja.")
 
-# Threshold LBPH (lebih kecil = lebih yakin). Sesuaikan 60–80
-THRESHOLD = 70.0
+# Threshold LBPH (semakin kecil = semakin yakin). Silakan sesuaikan 70–90.
+THRESHOLD = 85.0
 
-# ========== Helpers ==========
+# ==== Helpers ====
 def preprocess(gray_roi):
     roi = cv2.resize(gray_roi, (200, 200))
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
     return clahe.apply(roi)
+
+def predict_best_angle(gray_face, angles=(-20, -10, 0, 10, 20)):
+    """
+    Coba beberapa sudut rotasi; ambil label & confidence terbaik (paling kecil).
+    """
+    h, w = gray_face.shape
+    best_label, best_conf = None, 1e9
+    for ang in angles:
+        if ang != 0:
+            M = cv2.getRotationMatrix2D((w//2, h//2), ang, 1.0)
+            rotated = cv2.warpAffine(gray_face, M, (w, h), borderMode=cv2.BORDER_REFLECT)
+        else:
+            rotated = gray_face
+        roi = preprocess(rotated)
+        label, conf = recognizer.predict(roi)
+        if conf < best_conf:
+            best_label, best_conf = label, conf
+    return best_label, best_conf
 
 def _iou(a, b):
     ax, ay, aw, ah = a
@@ -56,6 +75,9 @@ def _no_big_overlap(box, boxes, thr=0.35):
     return all(_iou(box, b) <= thr for b in boxes)
 
 def detect_faces_robust(gray):
+    """
+    Gabungan frontal + profile + profile-flipped, dengan anti-duplikasi (IoU).
+    """
     faces = list(frontal.detectMultiScale(gray, 1.1, 5, minSize=(30, 30)))
 
     if profile is not None:
@@ -73,7 +95,7 @@ def detect_faces_robust(gray):
 
     return faces
 
-# ========== Run ==========
+# ==== Run ====
 cap = cv2.VideoCapture(0)
 
 while True:
@@ -85,8 +107,10 @@ while True:
     faces = detect_faces_robust(gray)
 
     for (x, y, w, h) in faces:
-        roi = preprocess(gray[y:y+h, x:x+w])
-        label, conf = recognizer.predict(roi)  # LBPH: semakin kecil semakin yakin
+        crop = gray[y:y+h, x:x+w]
+
+        # --- KUNCI: coba beberapa sudut, pilih confidence terbaik ---
+        label, conf = predict_best_angle(crop, angles=(-20, -10, 0, 10, 20))
 
         if conf <= THRESHOLD:
             name = id_to_name.get(str(label), f"ID {label}")
