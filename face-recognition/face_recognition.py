@@ -13,7 +13,7 @@ faceCascade = cv2.CascadeClassifier(cascade_path)
 font = cv2.FONT_HERSHEY_COMPLEX
 
 id = 0
-names = ['None', 'Alfi', 'Ayesha', 'Ervina']
+names = ['None', 'Alfi', 'Ervina', 'Ayesha']
 cap = cv2.VideoCapture(0)
 
 while True:
