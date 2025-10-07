@@ -18,7 +18,7 @@ while True:
     _, frame = cap.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = faceCascade.detectMultiScale(frame, scaleFactor=1.1,
-                                         minNeighbors=5, minSize=(30, 30))
+                                        minNeighbors=5, minSize=(30, 30))
 
     for (x,y,w,h) in faces:
         cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 2)
